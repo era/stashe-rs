@@ -20,16 +20,6 @@ fn main() {
     let diff_view = Panel::new(LinearLayout::vertical().with_name("diff_view")).title("Diff");
 
     let mut select = select_stash(stashes);
-    // When an option is selected, update the text view with the selected option
-    select.set_on_submit(move |s: &mut cursive::Cursive, item: &git::StashDiff| {
-        if let Some(mut diff_view) = s.find_name::<LinearLayout>("diff_view") {
-            // text_view.set_color(ColorStyle::new(Color::Dark(BaseColor::Green), Color::Reset)); //select_repo.diff(item)
-            diff_view.clear();
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::tertiary()));
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::secondary()));
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::primary()));
-        }
-    });
 
     let main_layout = LinearLayout::vertical()
         .child(Panel::new(TextView::new(
@@ -53,5 +43,15 @@ fn select_stash<'a>(stashes: Vec<git::StashDiff>) -> SelectView<git::StashDiff> 
     for stash in stashes {
         select.add_item(stash.title().to_string(), stash);
     }
+    // When an option is selected, update the text view with the selected option
+    select.set_on_submit(move |s: &mut cursive::Cursive, item: &git::StashDiff| {
+        if let Some(mut diff_view) = s.find_name::<LinearLayout>("diff_view") {
+            // text_view.set_color(ColorStyle::new(Color::Dark(BaseColor::Green), Color::Reset)); //select_repo.diff(item)
+            diff_view.clear();
+            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::tertiary()));
+            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::secondary()));
+            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::primary()));
+        }
+    });
     select
 }

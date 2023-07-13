@@ -1,0 +1,15 @@
+[package]
+name = "stashe-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.71"
+clap = "4.3.11"
+cursive = "0.20.0"
+git2 = "0.17.2"
+
+[dev-dependencies]
+tempdir = "0.3.7"

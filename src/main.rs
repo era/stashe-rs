@@ -33,7 +33,7 @@ fn main() {
         .scroll_x(true)
         .scroll_y(true);
 
-    siv.add_fullscreen_layer(main_layout);
+    siv.add_layer(main_layout);
 
     siv.run();
 }

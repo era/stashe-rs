@@ -142,10 +142,11 @@ impl Repo {
     }
 
     pub fn stash(&mut self, msg: &str) -> Result<()> {
-        let signature = self
-            .repo
-            .signature()
-            .context("could not get default signature")?;
+        let signature = match self.repo.signature() {
+            Ok(s) => s,
+            _ => git2::Signature::now("stash-rs application", "")
+                .context("could not create signature")?,
+        };
 
         self.repo
             .stash_save(&signature, msg, None)

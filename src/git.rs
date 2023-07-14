@@ -50,7 +50,7 @@ pub enum LineDiff {
 
 #[derive(Debug)]
 pub struct StashDiff {
-    diffs: Vec<LineDiff>,
+    pub diffs: Vec<LineDiff>,
     stash: Stash,
 }
 

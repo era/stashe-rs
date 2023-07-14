@@ -46,12 +46,31 @@ fn select_stash<'a>(stashes: Vec<git::StashDiff>) -> SelectView<git::StashDiff> 
     // When an option is selected, update the text view with the selected option
     select.set_on_submit(move |s: &mut cursive::Cursive, item: &git::StashDiff| {
         if let Some(mut diff_view) = s.find_name::<LinearLayout>("diff_view") {
-            // text_view.set_color(ColorStyle::new(Color::Dark(BaseColor::Green), Color::Reset)); //select_repo.diff(item)
-            diff_view.clear();
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::tertiary()));
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::secondary()));
-            diff_view.add_child(TextView::new("for now").style(cursive::theme::ColorStyle::primary()));
+            render_diff(&mut diff_view, &item);
         }
     });
     select
+}
+
+fn render_diff(view: &mut LinearLayout, diff: &git::StashDiff) {
+    for line in &diff.diffs {
+        let text = match line {
+            git::LineDiff::HunkHeader(c)
+            | git::LineDiff::LineBinary(c)
+            | git::LineDiff::FileHeader(c)
+            | git::LineDiff::RemoveEndOfAFile(c)
+            | git::LineDiff::AddEndOfAFile(c)
+            | git::LineDiff::ContextEndOfAFile(c) => {
+                TextView::new(c).style(cursive::theme::ColorStyle::primary())
+            }
+            git::LineDiff::Addition(c) => {
+                TextView::new(format!("+++ {c}")).style(cursive::theme::ColorStyle::secondary())
+            }
+            git::LineDiff::Deletion(c) => {
+                TextView::new(format!("--- {c}")).style(cursive::theme::ColorStyle::tertiary())
+            }
+            git::LineDiff::SameAsPrevious(c) => TextView::new(format!("{c}")),
+        };
+        view.add_child(text);
+    }
 }

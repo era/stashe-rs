@@ -144,7 +144,7 @@ impl Repo {
     pub fn stash(&mut self, msg: &str) -> Result<()> {
         let signature = match self.repo.signature() {
             Ok(s) => s,
-            _ => git2::Signature::now("stash-rs application", "")
+            _ => git2::Signature::now("stash-rs application", "stashapp")
                 .context("could not create signature")?,
         };
 
@@ -175,7 +175,7 @@ mod test {
             .add_all(&["."], git2::IndexAddOption::DEFAULT, None)
             .unwrap();
         let oid = index.write_tree().unwrap();
-        let signature = git2::Signature::now("secure-crates", "s@mmtestmm.com").unwrap();
+        let signature = git2::Signature::now("stash-rs application", "stashapp").unwrap();
         let tree = repo.find_tree(oid).unwrap();
         let msg: &str = "Inital Commit";
         repo.commit(Some("HEAD"), &signature, &signature, &msg, &tree, &[])

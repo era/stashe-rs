@@ -6,8 +6,8 @@ use cursive::views::EditView;
 use cursive::views::Panel;
 use cursive::views::{LinearLayout, SelectView, TextView};
 use cursive::CursiveExt;
-use std::env::current_dir;
 use std::cell::RefCell;
+use std::env::current_dir;
 
 fn main() {
     //TODO organize this mess
@@ -22,6 +22,15 @@ fn main() {
     let diff_view = Panel::new(LinearLayout::vertical().with_name("diff_view")).title("Diff");
 
     let mut select = select_stash(stashes, stash_selected.clone());
+    // apply callback
+    let apply_stash = stash_selected.clone();
+    let apply_repo = repo.clone();
+    siv.add_global_callback('a', move |s| {
+        match apply_stash.replace(None) {
+            Some(t) => apply_repo.stash_apply(t), //TODO also needs to refresh the window
+            None => todo!(),                      // show error to user
+        };
+    });
 
     let main_layout = LinearLayout::vertical()
         .child(Panel::new(TextView::new(
@@ -40,7 +49,10 @@ fn main() {
     siv.run();
 }
 
-fn select_stash<'a>(stashes: Vec<git::StashDiff>, selected: RefCell<Option<usize>>) -> SelectView<git::StashDiff> {
+fn select_stash<'a>(
+    stashes: Vec<git::StashDiff>,
+    selected: RefCell<Option<usize>>,
+) -> SelectView<git::StashDiff> {
     let mut select = SelectView::new(); //.h_align(cursive::align::HAlign::Center).v_align(cursive::align::VAlign::Center)
     for stash in stashes {
         select.add_item(stash.title().to_string(), stash);

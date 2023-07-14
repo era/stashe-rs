@@ -3,10 +3,13 @@ use anyhow::Result;
 use git2::DiffOptions;
 use git2::Oid;
 use git2::Repository;
+use std::cell::RefCell;
 use std::fs::File;
+use std::rc::Rc;
 
+#[derive(Clone)]
 pub struct Repo {
-    repo: Repository,
+    repo: Rc<RefCell<Repository>>,
 }
 
 #[derive(Debug)]
@@ -87,10 +90,12 @@ impl StashDiff {
 impl Repo {
     pub fn new(path: &str) -> Result<Self> {
         let repo = Repository::init(path).context("could not create a repo object")?;
-        Ok(Self { repo })
+        Ok(Self {
+            repo: Rc::new(RefCell::new(repo)),
+        })
     }
 
-    pub fn stashes(&mut self) -> Result<Vec<StashDiff>> {
+    pub fn stashes(&self) -> Result<Vec<StashDiff>> {
         let stashes = self.stash_show()?;
         let mut result = Vec::new();
         for s in stashes {
@@ -100,9 +105,10 @@ impl Repo {
         Ok(result)
     }
 
-    fn stash_show(&mut self) -> Result<Vec<Stash>> {
+    fn stash_show(&self) -> Result<Vec<Stash>> {
         let mut stashes = Vec::new();
         self.repo
+            .borrow_mut()
             .stash_foreach(|index: usize, title: &str, id: &Oid| {
                 stashes.push(Stash::new(index, title.to_string(), id.clone()));
                 true
@@ -112,18 +118,17 @@ impl Repo {
         Ok(stashes)
     }
 
-    fn diff(&mut self, stash: &Stash) -> Result<Vec<LineDiff>> {
-        let stash_commit = self
-            .repo
+    fn diff(&self, stash: &Stash) -> Result<Vec<LineDiff>> {
+        let binding = self.repo.borrow_mut();
+
+        let stash_commit = binding
             .find_commit(stash.commit_id)
             .context("Failed to find stash commit")?;
-        let stash_tree = self
-            .repo
+        let stash_tree = binding
             .find_tree(stash_commit.tree_id())
             .context("Failed to find stash tree")?;
 
-        let diff = self
-            .repo
+        let diff = binding
             .diff_tree_to_workdir_with_index(
                 Some(&stash_tree),
                 Some(DiffOptions::new().reverse(true)),
@@ -145,22 +150,24 @@ impl Repo {
         Ok(diffs)
     }
 
-    pub fn stash(&mut self, msg: &str) -> Result<()> {
-        let signature = match self.repo.signature() {
+    pub fn stash(&self, msg: &str) -> Result<()> {
+        let signature = match self.repo.borrow().signature() {
             Ok(s) => s,
             _ => git2::Signature::now("stash-rs application", "stashapp")
                 .context("could not create signature")?,
         };
 
         self.repo
+            .borrow_mut()
             .stash_save(&signature, msg, None)
             .context("could not stash")?;
         Ok(())
     }
 
-    pub fn stash_apply(&mut self, stash: &StashDiff) -> Result<()> {
+    pub fn stash_apply(&self, stash_index: usize) -> Result<()> {
         self.repo
-            .stash_pop(stash.stash.index, None)
+            .borrow_mut()
+            .stash_pop(stash_index, None)
             .context("could not stash pop the index to apply")?;
         Ok(())
     }
@@ -220,7 +227,7 @@ mod test {
             stash.diffs.get(2).unwrap()
         );
 
-        repo.stash_apply(stash).unwrap();
+        repo.stash_apply(stash.index()).unwrap();
         repo.stash("this is a test 2").unwrap();
         let stashes = repo.stashes().unwrap();
         assert!(stashes.len() == 1);

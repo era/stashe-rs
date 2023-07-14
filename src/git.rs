@@ -78,6 +78,10 @@ impl StashDiff {
     pub fn title(&self) -> &str {
         &self.stash.title
     }
+
+    pub fn index(&self) -> usize {
+        self.stash.index
+    }
 }
 
 impl Repo {

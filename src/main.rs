@@ -7,6 +7,7 @@ use cursive::views::Panel;
 use cursive::views::{LinearLayout, SelectView, TextView};
 use cursive::CursiveExt;
 use std::env::current_dir;
+use std::cell::RefCell;
 
 fn main() {
     //TODO organize this mess
@@ -14,12 +15,13 @@ fn main() {
     let mut repo = git::Repo::new(current_dir.as_os_str().to_str().unwrap()).unwrap();
     let stashes = repo.stashes().unwrap();
     let mut siv = cursive::default();
+    let stash_selected: RefCell<Option<usize>> = RefCell::new(None);
 
     siv.add_global_callback('q', |s| s.quit());
 
     let diff_view = Panel::new(LinearLayout::vertical().with_name("diff_view")).title("Diff");
 
-    let mut select = select_stash(stashes);
+    let mut select = select_stash(stashes, stash_selected.clone());
 
     let main_layout = LinearLayout::vertical()
         .child(Panel::new(TextView::new(
@@ -38,7 +40,7 @@ fn main() {
     siv.run();
 }
 
-fn select_stash<'a>(stashes: Vec<git::StashDiff>) -> SelectView<git::StashDiff> {
+fn select_stash<'a>(stashes: Vec<git::StashDiff>, selected: RefCell<Option<usize>>) -> SelectView<git::StashDiff> {
     let mut select = SelectView::new(); //.h_align(cursive::align::HAlign::Center).v_align(cursive::align::VAlign::Center)
     for stash in stashes {
         select.add_item(stash.title().to_string(), stash);
@@ -47,6 +49,7 @@ fn select_stash<'a>(stashes: Vec<git::StashDiff>) -> SelectView<git::StashDiff> 
     select.set_on_submit(move |s: &mut cursive::Cursive, item: &git::StashDiff| {
         if let Some(mut diff_view) = s.find_name::<LinearLayout>("diff_view") {
             render_diff(&mut diff_view, &item);
+            selected.replace(Some(item.index()));
         }
     });
     select

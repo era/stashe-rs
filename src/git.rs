@@ -178,6 +178,7 @@ mod test {
     use super::*;
     use std::io::Write;
     use tempdir::TempDir;
+    use std::fs::File;
 
     fn commit_all(repo: &mut Repository) {
         let mut index = repo.index().unwrap();

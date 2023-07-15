@@ -176,9 +176,9 @@ impl Repo {
 mod test {
 
     use super::*;
+    use std::fs::File;
     use std::io::Write;
     use tempdir::TempDir;
-    use std::fs::File;
 
     fn commit_all(repo: &mut Repository) {
         let mut index = repo.index().unwrap();
@@ -204,7 +204,7 @@ mod test {
         commit_all(&mut repo);
         file.write_all("Hello, world!".as_bytes()).unwrap();
 
-        let mut repo = Repo::new(tmpdir.path().as_os_str().to_str().unwrap()).unwrap();
+        let repo = Repo::new(tmpdir.path().as_os_str().to_str().unwrap()).unwrap();
         repo.stash("this is a test").unwrap();
 
         let stashes = repo.stashes().unwrap();
